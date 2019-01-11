@@ -1,17 +1,9 @@
 import { routes } from './server/routes';
-import {
-  checkClusterStatusTask,
-  checkLicenseStatusTask,
-  runFreeformTask,
-} from './server/lib';
+import { runFreeformTask } from './server/lib';
 
 import {
   PLUGIN_NAME,
   FORM_SCHEDULER,
-  TASK_CHECK_CLUSTER,
-  TASK_CHECK_LICENSE,
-  TASK_CHECK_CLUSTER_ID,
-  TASK_CHECK_LICENSE_ID,
   ALERTS_INDEX_NAME,
   ALERTS_INDEX_TYPE,
 } from './constants';
@@ -139,7 +131,7 @@ export default function tasksDemo(kibana) {
 
     async init(server) {
       server.plugins.elasticsearch.status.on('green', putSettings(server, this));
-
+      routes(server);
       const { taskManager } = server;
       registerTaskDefinitions(taskManager);
       // alertService.registerAlertTemplate({

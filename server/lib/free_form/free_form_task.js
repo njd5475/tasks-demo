@@ -1,4 +1,7 @@
+import { FAIL_EVERY } from '../../../constants';
 import { sendAlert } from './send_alert';
+
+let failIndex = 0; // server-wide
 
 export function runFreeformTask({ kbnServer, taskInstance }) {
   const { server } = kbnServer;
@@ -12,10 +15,12 @@ export function runFreeformTask({ kbnServer, taskInstance }) {
     const { index, query, headers, threshold, failMe } = params;
     const runs = state.runs || 0;
 
-    if (failMe) {
+    failIndex++;
+    if (failMe && failIndex % FAIL_EVERY === 0) {
       throw new Error(`Failing "${taskInstance.id}": it is configured to fail!`);
     }
 
+    const nextRuns = runs + 1;
     try {
       // FIXME this uses credentials stored in plaintext lol
       const results = await callWithRequest({ headers }, 'search', {
@@ -24,18 +29,22 @@ export function runFreeformTask({ kbnServer, taskInstance }) {
       });
       const hits = results.hits;
 
-      if (hits.total >= threshold) {
+      if (hits.total.value >= threshold) {
         await loggerAction.performAction({
           message: `${taskInstance.id} hit its threshold! Hits: ${
-            hits.total
+            hits.total.value
           } Threshold: ${threshold}`,
         });
         await sendAlert(server, hits, params, state);
       }
 
-      return { state: { ran: true, runs: runs + 1, hits_total: hits.total } };
+      return {
+        state: { ran: true, runs: nextRuns, hits_total: hits.total.value },
+      };
     } catch (err) {
-      return { state: { ran: false, error: err.message } };
+      return {
+        state: { ran: false, runs: nextRuns, error: err.message },
+      };
     }
   };
 }

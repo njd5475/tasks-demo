@@ -62,7 +62,7 @@ function putSettings(server, plugin) {
   };
 }
 
-const registerTaskDefinitions = taskManager => {
+const registerTaskDefinitions = (taskManager, alertService) => {
   taskManager.registerTaskDefinitions({
     [FORM_SCHEDULER]: {
       type: PLUGIN_NAME,
@@ -81,13 +81,13 @@ const registerTaskDefinitions = taskManager => {
           run: checkClusterStatusTask(context),
         };
       },
-      static: [
-        {
-          id: TASK_CHECK_CLUSTER_ID,
-          taskType: TASK_CHECK_CLUSTER,
-          scope: PLUGIN_NAME + '-builtin',
-        },
-      ],
+      // static: [
+      //   {
+      //     id: TASK_CHECK_CLUSTER_ID,
+      //     taskType: TASK_CHECK_CLUSTER,
+      //     scope: PLUGIN_NAME + '-builtin',
+      //   },
+      // ],
     },
     [TASK_CHECK_LICENSE]: {
       type: PLUGIN_NAME,
@@ -97,15 +97,25 @@ const registerTaskDefinitions = taskManager => {
           run: checkLicenseStatusTask(context),
         };
       },
-      static: [
-        {
-          id: TASK_CHECK_LICENSE_ID,
-          taskType: TASK_CHECK_LICENSE,
-          scope: PLUGIN_NAME + '-builtin',
-        },
-      ],
+      // static: [
+      //   {
+      //     id: TASK_CHECK_LICENSE_ID,
+      //     taskType: TASK_CHECK_LICENSE,
+      //     scope: PLUGIN_NAME + '-builtin',
+      //   },
+      // ],
     },
   });
+
+  // alertService.registerAlertTemplate({
+  //   id: 'someAlertTemplate',
+  //   check: (context) => {
+  //
+  //   },
+  //   notify: () => {
+  //
+  //   }
+  // })
 };
 
 export default function tasksDemo(kibana) {
@@ -132,6 +142,23 @@ export default function tasksDemo(kibana) {
 
       const { taskManager } = server;
       registerTaskDefinitions(taskManager);
+      // alertService.registerAlertTemplate({
+      //   id: 'someOtherAlertTemplate',
+      //   check: ({state, log, params}) => {
+      //     const runCount = (state.times || 0) + 1
+      //     server.log(['info', 'tasks-demo'], `Our ${runCount}th task is running`);
+      //
+      //     return {
+      //       notify: true,
+      //       state: {
+      //         times: runCount,
+      //       },
+      //     }
+      //   },
+      //   notify: () => {
+      //     server.log(['info', 'tasks-demo'], 'Here we are notifying you our check succeeded');
+      //   },
+      // });
       routes(server);
     },
   });
